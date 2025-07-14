@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cálculo de Viáticos para Conductores</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="datetime-local"], input[type="time"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            border-left: 4px solid #4CAF50;
+        }
+        .result-item {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .error {
+            color: red;
+            margin-top: 5px;
+        }
+        .parametros {
+            background-color: #f0f8ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .param-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .param-col {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cálculo de Viáticos para Conductores</h1>
+        
+        <div class="parametros">
+            <h2>Parámetros de Comidas</h2>
+            
+            <div class="param-row">
+                <div class="param-col">
+                    <label for="desayunoInicio">Desayuno - Inicio antes de:</label>
+                    <input type="time" id="desayunoInicio" value="07:01">
+                </div>
+                <div class="param-col">
+                    <label for="desayunoFin">Desayuno - Fin después de:</label>
+                    <input type="time" id="desayunoFin" value="07:00">
+                </div>
+            </div>
+            
+            <div class="param-row">
+                <div class="param-col">
+                    <label for="almuerzoInicio">Almuerzo - Inicio antes de:</label>
+                    <input type="time" id="almuerzoInicio" value="11:46">
+                </div>
+                <div class="param-col">
+                    <label for="almuerzoFin">Almuerzo - Fin después de:</label>
+                    <input type="time" id="almuerzoFin" value="13:15">
+                </div>
+            </div>
+            
+            <div class="param-row">
+                <div class="param-col">
+                    <label for="meriendaInicio">Merienda - Inicio antes de:</label>
+                    <input type="time" id="meriendaInicio" value="16:01">
+                </div>
+                <div class="param-col">
+                    <label for="meriendaFin">Merienda - Fin después de:</label>
+                    <input type="time" id="meriendaFin" value="16:00">
+                </div>
+            </div>
+            
+            <div class="param-row">
+                <div class="param-col">
+                    <label for="cenaInicio">Cena - Inicio antes de:</label>
+                    <input type="time" id="cenaInicio" value="19:46">
+                </div>
+                <div class="param-col">
+                    <label for="cenaFin">Cena - Fin después de:</label>
+                    <input type="time" id="cenaFin" value="21:15">
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="inicioServicio">Fecha y hora de inicio de servicio (ida):</label>
+            <input type="datetime-local" id="inicioServicio" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="llegadaDestino">Fecha y hora de llegada a destino:</label>
+            <input type="datetime-local" id="llegadaDestino" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="inicioRegreso">Fecha y hora de inicio de regreso:</label>
+            <input type="datetime-local" id="inicioRegreso" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="finalizacionServicio">Fecha y hora de finalización de servicio:</label>
+            <input type="datetime-local" id="finalizacionServicio" required>
+        </div>
+        
+        <button onclick="calcularViaticos()">Calcular Viáticos</button>
+        
+        <div id="error" class="error"></div>
+        
+        <div id="results" class="results" style="display: none;">
+            <h2>Resultados</h2>
+            <div class="result-item">Desayunos: <span id="desayunos">0</span></div>
+            <div class="result-item">Almuerzos: <span id="almuerzos">0</span></div>
+            <div class="result-item">Meriendas: <span id="meriendas">0</span></div>
+            <div class="result-item">Cenas: <span id="cenas">0</span></div>
+            <div class="result-item">Camas: <span id="camas">0</span></div>
+        </div>
+    </div>
+
+    <script>
+        function calcularViaticos() {
+            // Obtener valores de fechas
+            const inicioServicio = document.getElementById('inicioServicio').value;
+            const llegadaDestino = document.getElementById('llegadaDestino').value;
+            const inicioRegreso = document.getElementById('inicioRegreso').value;
+            const finalizacionServicio = document.getElementById('finalizacionServicio').value;
+            
+            // Obtener parámetros de comidas
+            const params = {
+                desayuno: {
+                    inicio: document.getElementById('desayunoInicio').value,
+                    fin: document.getElementById('desayunoFin').value
+                },
+                almuerzo: {
+                    inicio: document.getElementById('almuerzoInicio').value,
+                    fin: document.getElementById('almuerzoFin').value
+                },
+                merienda: {
+                    inicio: document.getElementById('meriendaInicio').value,
+                    fin: document.getElementById('meriendaFin').value
+                },
+                cena: {
+                    inicio: document.getElementById('cenaInicio').value,
+                    fin: document.getElementById('cenaFin').value
+                }
+            };
+            
+            // Validaciones básicas
+            if (!inicioServicio || !llegadaDestino || !inicioRegreso || !finalizacionServicio) {
+                document.getElementById('error').textContent = 'Por favor complete todos los campos.';
+                document.getElementById('results').style.display = 'none';
+                return;
+            }
+            
+            // Convertir a Date
+            const inicioDate = new Date(inicioServicio);
+            const llegadaDate = new Date(llegadaDestino);
+            const regresoDate = new Date(inicioRegreso);
+            const finalizacionDate = new Date(finalizacionServicio);
+            
+            // Validar orden cronológico
+            if (llegadaDate <= inicioDate || regresoDate <= llegadaDate || finalizacionDate <= regresoDate) {
+                document.getElementById('error').textContent = 'Las fechas deben estar en orden cronológico.';
+                document.getElementById('results').style.display = 'none';
+                return;
+            }
+            
+            // Inicializar contadores
+            const viaticos = {
+                desayunos: 0,
+                almuerzos: 0,
+                meriendas: 0,
+                cenas: 0,
+                camas: 0
+            };
+            
+            // 1. Calcular CAMA (cada 24 horas en destino)
+            const horasEnDestino = (regresoDate - llegadaDate) / (1000 * 60 * 60);
+            viaticos.camas = Math.floor(horasEnDestino / 24) + 1;
+
+            // 2. Obtener todos los días del viaje
+            const diasViaje = [];
+            let fechaActual = new Date(inicioDate);
+            fechaActual.setHours(0, 0, 0, 0);
+            
+            const fechaFin = new Date(finalizacionDate);
+            fechaFin.setHours(23, 59, 59, 999);
+            
+            while (fechaActual <= fechaFin) {
+                diasViaje.push(new Date(fechaActual));
+                fechaActual.setDate(fechaActual.getDate() + 1);
+            }
+
+            // 3. Calcular comidas para cada día
+            diasViaje.forEach(dia => {
+                const diaStr = dia.toISOString().split('T')[0];
+                
+                // Convertir parámetros a fechas completas para este día
+                const desayunoCorte = new Date(diaStr + 'T' + params.desayuno.inicio);
+                const desayunoFin = new Date(diaStr + 'T' + params.desayuno.fin);
+                
+                const almuerzoCorte = new Date(diaStr + 'T' + params.almuerzo.inicio);
+                const almuerzoFin = new Date(diaStr + 'T' + params.almuerzo.fin);
+                
+                const meriendaCorte = new Date(diaStr + 'T' + params.merienda.inicio);
+                const meriendaFin = new Date(diaStr + 'T' + params.merienda.fin);
+                
+                const cenaCorte = new Date(diaStr + 'T' + params.cena.inicio);
+                const cenaFin = new Date(diaStr + 'T' + params.cena.fin);
+                
+                // Desayuno: inicio < corte Y fin > fin mínimo
+                if (inicioDate < desayunoCorte && finalizacionDate > desayunoFin) {
+                    viaticos.desayunos++;
+                }
+                
+                // Almuerzo: inicio < corte Y fin > fin mínimo
+                if (inicioDate < almuerzoCorte && finalizacionDate > almuerzoFin) {
+                    viaticos.almuerzos++;
+                }
+                
+                // Merienda: inicio < corte Y fin > fin mínimo
+                if (inicioDate < meriendaCorte && finalizacionDate > meriendaFin) {
+                    viaticos.meriendas++;
+                }
+                
+                // Cena: inicio < corte Y fin > fin mínimo
+                if (inicioDate < cenaCorte && finalizacionDate > cenaFin) {
+                    viaticos.cenas++;
+                }
+            });
+
+            // Mostrar resultados
+            document.getElementById('desayunos').textContent = viaticos.desayunos;
+            document.getElementById('almuerzos').textContent = viaticos.almuerzos;
+            document.getElementById('meriendas').textContent = viaticos.meriendas;
+            document.getElementById('cenas').textContent = viaticos.cenas;
+            document.getElementById('camas').textContent = viaticos.camas;
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('error').textContent = '';
+        }
+    </script>
+</body>
+</html>
